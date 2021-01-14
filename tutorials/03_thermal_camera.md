@@ -8,6 +8,7 @@ There are currently a few limitations with the thermal camera, which will be men
 
 Since this tutorial will show how to use a thermal camera sensor in Ignition Gazebo, you'll need to have Ignition Gazebo installed.
 We recommend installing all Ignition libraries, using version Citadel or newer (the thermal camera is not available in Ignition versions prior to Citadel).
+If you'd like to use the thermal camera's heat signature capabilities, you'll need to use at least Ignition Dome.
 If you need to install Ignition, [pick the version you'd like to use](https://ignitionrobotics.org/docs) and then follow the installation instructions.
 
 ## Setting up the thermal camera
@@ -94,7 +95,12 @@ This is currently unused by Ignition Gazebo.
 Now that we have set up our thermal camera, we'll need to assign temperatures to models in the environment.
 If a model doesn't have a temperature associated with it, then the thermal camera cannot detect it.
 
-Here's an example of a box model that has a temperature assigned to it:
+The thermal camera can support objects that either have a uniform or varying surface temperature.
+We will go over each approach in the following subsections.
+
+### Objects with a uniform temperature
+
+Here's an example of a box model that has a uniform temperature assigned to it:
 
 ```xml
 <model name="box">
@@ -152,6 +158,33 @@ Most of the code above is for the model - here's the key piece for temperature a
 
 Once the thermal system plugin is specified, all we need to do is include the `<temperature>` element, which specifies the model's temperature in Kelvin.
 
+### Objects with a varying temperature
+
+Most of the time, objects have a varying temperature.
+Here's an example of the [rescue randy](https://app.ignitionrobotics.org/OpenRobotics/fuel/models/Rescue%20Randy%20Heat%20Signature) model, which has a "heat signature" applied to it.
+The heat signature is a texture that can be applied to a model, which specifies the model's temperature across its surface.
+
+If we take a look at rescue randy's `model.sdf`, we can see that it incorporates the thermal system plugin, just like the uniform temperature box example above:
+
+```xml
+        <plugin
+          filename="ignition-gazebo-thermal-system"
+          name="ignition::gazebo::systems::Thermal">
+          <heat_signature>https://fuel.ignitionrobotics.org/1.0/openrobotics/models/rescue randy heat signature/2/files/materials/textures/RescueRandy_Thermal.png</heat_signature>
+          <min_temp>0</min_temp>
+          <max_temp>655.35</max_temp>
+        </plugin>
+```
+
+There are a few differences to note for objects with a varying temperature:
+* `<heat_signature>`: The path to the heat signature texture.
+This can either be an [Ignition Fuel](https://ignitionrobotics.org/libs/fuel_tools) URI, or a path to a file that is on your machine locally.
+If using paths to local files, be sure to use absolute paths.
+* `<min_temp>`: The minimum temperature that should be represented by the heat signature.
+For this example, the temperature units are in Kelvin.
+* `<max_temp>`: The maximum temperature that should be represented by the heat signature.
+655.35 is the maximum value for a 16-bit thermal camera with a 10mK linear resolution.
+
 ## Running an example:
 
 Now that we've discussed how a thermal camera and models with temperature can be specified, let's start an example world that uses the thermal camera.
@@ -167,19 +200,28 @@ You should see something similar to this:
 @image html files/thermal_camera/thermal_camera_demo.png
 
 The window in the top-left corner shows the thermal camera's output.
-Taking a look at the [SDF file](https://github.com/ignitionrobotics/ign-gazebo/blob/c3391b1b664d1ec2b931d9a4ac757bde33b2a27b/examples/worlds/thermal_camera.sdf) for this example shows that the shapes were assigned the following temperatures:
+Taking a look at the [SDF file](https://github.com/ignitionrobotics/ign-gazebo/blob/46adfe54af6aa0828f9d38da9fd578da22f2a0eb/examples/worlds/thermal_camera.sdf) for this example shows that the shapes were assigned the following temperatures:
 * sphere: 600 Kelvin
 * box: 200 Kelvin
 * cylinder: 400 Kelvin
+
+If we take a look at the rescue randy and samsung J8 [fuel models](https://app.ignitionrobotics.org/dashboard), we see that they each have the following temperature range:
+* 0 Kelvin minimum
+* 655.35 Kelvin maximum
 
 The temperature of objects in the view of the camera are normalized between 0 (black) and 255 (white) values.
 The object with the highest temperature in the camera's view will always have white color.
 If you move the object with the highest temperature out of the camera's view, the object with second highest temperature now becomes white.
 
-You can move the position of the shapes and/or camera around in the world to see the effect it has on the camera's output (the different "camera outputs" are how they are visualized in the GUI).
+You can move the position of the objects and/or camera around in the world to see the effect it has on the camera's output (the different "camera outputs" are how they are visualized in the GUI).
 An easy way to move objects in the world is by using `Transform Control`:
 
 @image html files/thermal_camera/thermal_camera_demo_2.png
+
+Another thing that you can do is modify the temperature ranges for objects with a varying heat signature.
+For example, if you go to the fuel cache on your machine (located at `~/.ignition/fuel/` by default) and then modify rescue randy's `model.sdf` to have `min_temp` be `200`, and `max_temp` be `500`, you should see output similar to this (be sure to re-start the simulator by killing the current simulator (`ctrl-c` will do) and then re-running `ign gazebo -r thermal_camera.sdf`):
+
+@image html files/thermal_camera/thermal_camera_demo_3.png
 
 ## Processing the thermal camera's output
 
@@ -260,8 +302,6 @@ Since this thermal camera has a linear resolution of .01 (10mK), and the maximum
 ## Thermal Camera Limitations
 
 The thermal camera has a few limitations:
-* When assigning a temperature to a model, that temperature is applied equally across the whole model instead of having a gradient that falls off from the center of a heat source.
-    - The current implementation allows for a temperature to be assigned to a model, but doesn't allow for the location of a heat source in a model to be specified.
 * If one object with a given temperature blocks another object with a given temperature (with respect to the thermal camera's point of view), the blocked object will not be displayed at all, regardless of each object's thickness and temperature difference between them (see the image below for an example).
 A more realistic implementation would have the camera display temperature fluctuations in the closer object if the temperature difference between the two objects is large enough, and if the closer object isn't too thick.
     - More information about thermal camera behavior can be found [here](https://www.flir.com/discover/cores-components/can-thermal-imaging-see-through-walls/).
