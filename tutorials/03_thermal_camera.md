@@ -158,9 +158,9 @@ Most of the code above is for the model - here's the key piece for temperature a
 
 Once the thermal system plugin is specified, all we need to do is include the `<temperature>` element, which specifies the model's temperature in Kelvin.
 
-### Objects with a varying temperature
+### Objects with a varying surface temperature
 
-Most of the time, objects have a varying temperature.
+Most of the time, objects have a varying surface temperature.
 Here's an example of the [rescue randy](https://app.ignitionrobotics.org/OpenRobotics/fuel/models/Rescue%20Randy%20Heat%20Signature) model, which has a "heat signature" applied to it.
 The heat signature is a texture that can be applied to a model, which specifies the model's temperature across its surface.
 
@@ -176,7 +176,7 @@ If we take a look at rescue randy's `model.sdf`, we can see that it incorporates
         </plugin>
 ```
 
-There are a few differences to note for objects with a varying temperature:
+There are a few differences to note for objects with a varying surface temperature:
 * `<heat_signature>`: The path to the heat signature texture.
 This can either be an [Ignition Fuel](https://ignitionrobotics.org/libs/fuel_tools) URI, or a path to a file that is on your machine locally.
 If using paths to local files, be sure to use absolute paths.
@@ -218,7 +218,7 @@ An easy way to move objects in the world is by using `Transform Control`:
 
 @image html files/thermal_camera/thermal_camera_demo_2.png
 
-Another thing that you can do is modify the temperature ranges for objects with a varying heat signature.
+Another thing that you can do is modify the temperature ranges for objects with a heat signature.
 For example, if you go to the fuel cache on your machine (located at `~/.ignition/fuel/` by default) and then modify rescue randy's `model.sdf` to have `min_temp` be `200`, and `max_temp` be `500`, you should see output similar to this (be sure to re-start the simulator by killing the current simulator (`ctrl-c` will do) and then re-running `ign gazebo -r thermal_camera.sdf`):
 
 @image html files/thermal_camera/thermal_camera_demo_3.png
