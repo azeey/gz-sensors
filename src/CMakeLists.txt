@@ -133,6 +133,10 @@ set (gtest_sources
 ign_build_tests(TYPE UNIT SOURCES ${gtest_sources} LIB_DEPS ${rendering_target})
 
 # Build the unit tests that depend on components.
-ign_build_tests(TYPE UNIT SOURCES Lidar_TEST.cc LIB_DEPS ${lidar_target})
-ign_build_tests(TYPE UNIT SOURCES Camera_TEST.cc LIB_DEPS ${camera_target})
-ign_build_tests(TYPE UNIT SOURCES ImuSensor_TEST.cc LIB_DEPS ${imu_target})
+ign_build_tests(TYPE UNIT SOURCES Lidar_TEST.cc LIB_DEPS ${lidar_target} TEST_LIST lidar_test_target)
+ign_build_tests(TYPE UNIT SOURCES Camera_TEST.cc LIB_DEPS ${camera_target} TEST_LIST camera_test_target)
+ign_build_tests(TYPE UNIT SOURCES ImuSensor_TEST.cc LIB_DEPS ${imu_target} TEST_LIST imu_test_target)
+if (APPLE)
+  set(_test_env_var  "DYLD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}")
+  set_tests_properties(${lidar_test_target} ${camera_test_target} ${imu_test_target} PROPERTIES ENVIRONMENT "${_test_env_var}")
+endif()
