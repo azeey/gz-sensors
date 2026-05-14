@@ -275,6 +275,8 @@ bool GpuLidarSensor::Update(const std::chrono::steady_clock::duration &_now)
   // Apply noise before publishing the data.
   this->ApplyNoise();
 
+  this->SetPose(this->dataPtr->gpuRays->WorldPose());
+
   this->PublishLidarScan(_now);
 
   if (this->dataPtr->pointPub.HasConnections())
